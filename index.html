@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ফ্রেমে ছবি যুক্ত করুন</title>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a7a3b, #0f9d58);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.25);
+      text-align: center;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0a7a3b;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    canvas {
+      width: 100%;
+      border-radius: 14px;
+      background: #eaeaea;
+      touch-action: none;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button, label {
+      flex: 1;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    label {
+      background: #0a7a3b;
+      color: #ffffff;
+    }
+
+    button {
+      background: #f1f3f4;
+    }
+
+    .download {
+      background: #0f9d58;
+      color: #ffffff;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="title">নিজের ছবিতে ফ্রেম যুক্ত করুন</div>
+  <div class="subtitle">ছবি টেনে ঠিক করুন, জুম করুন, তারপর ডাউনলোড</div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="controls">
+    <label>
+      ছবি আপলোড
+      <input type="file" id="upload" accept="image/*">
+    </label>
+    <button onclick="zoomIn()">＋</button>
+    <button onclick="zoomOut()">－</button>
+  </div>
+
+  <div class="controls">
+    <button class="download" onclick="downloadImage()">ডাউনলোড</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const frame = new Image();
+frame.src = "abutaleb.png";
+
+let userImg = new Image();
+let scale = 1;
+let posX = 0;
+let posY = 0;
+let dragging = false;
+let startX = 0;
+let startY = 0;
+
+frame.onload = () => {
+  canvas.width = frame.width;
+  canvas.height = frame.height;
+  draw();
+};
+
+document.getElementById("upload").addEventListener("change", e => {
+  userImg.onload = () => {
+    scale = 1;
+    posX = 0;
+    posY = 0;
+    draw();
+  };
+  userImg.src = URL.createObjectURL(e.target.files[0]);
+});
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (userImg.src) {
+    const w = userImg.width * scale;
+    const h = userImg.height * scale;
+    ctx.drawImage(userImg, posX, posY, w, h);
+  }
+
+  ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+}
+
+function zoomIn() {
+  scale += 0.1;
+  draw();
+}
+
+function zoomOut() {
+  scale = Math.max(0.2, scale - 0.1);
+  draw();
+}
+
+canvas.addEventListener("pointerdown", e => {
+  dragging = true;
+  startX = e.offsetX - posX;
+  startY = e.offsetY - posY;
+});
+
+canvas.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  posX = e.offsetX - startX;
+  posY = e.offsetY - startY;
+  draw();
+});
+
+canvas.addEventListener("pointerup", () => dragging = false);
+canvas.addEventListener("pointerleave", () => dragging = false);
+
+function downloadImage() {
+  const link = document.createElement("a");
+  link.download = "framed-photo.jpg";
+  link.href = canvas.toDataURL("image/jpeg", 0.95);
+  link.click();
+}
+</script>
+
+</body>
+</html>
